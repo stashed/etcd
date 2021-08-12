@@ -1,12 +1,12 @@
-[![Go Report Card](https://goreportcard.com/badge/stash.appscode.dev/redis)](https://goreportcard.com/report/stash.appscode.dev/redis)
-![CI](https://github.com/stashed/redis/workflows/CI/badge.svg)
-[![Docker Pulls](https://img.shields.io/docker/pulls/stashed/stash-redis.svg)](https://hub.docker.com/r/stashed/stash-redis/)
+[![Go Report Card](https://goreportcard.com/badge/stash.appscode.dev/etcd)](https://goreportcard.com/report/stash.appscode.dev/etcd)
+![CI](https://github.com/stashed/etcd/workflows/CI/badge.svg)
+[![Docker Pulls](https://img.shields.io/docker/pulls/stashed/stash-etcd.svg)](https://hub.docker.com/r/stashed/stash-etcd/)
 [![Slack](https://shields.io/badge/Join_Slack-salck?color=4A154B&logo=slack)](https://slack.appscode.com)
 [![Twitter](https://img.shields.io/twitter/follow/kubestash.svg?style=social&logo=twitter&label=Follow)](https://twitter.com/intent/follow?screen_name=KubeStash)
 
-# Redis
+# Etcd
 
-Redis backup and restore plugin for [Stash by AppsCode](https://stash.run).
+Etcd backup and restore plugin for [Stash by AppsCode](https://stash.run).
 
 ## Support
 
