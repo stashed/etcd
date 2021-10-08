@@ -27,10 +27,9 @@ import (
 )
 
 const (
-	RESTIC_REPOSITORY   = "RESTIC_REPOSITORY"
-	RESTIC_PASSWORD     = "RESTIC_PASSWORD"
-	RESTIC_PROGRESS_FPS = "RESTIC_PROGRESS_FPS"
-	TMPDIR              = "TMPDIR"
+	RESTIC_REPOSITORY = "RESTIC_REPOSITORY"
+	RESTIC_PASSWORD   = "RESTIC_PASSWORD"
+	TMPDIR            = "TMPDIR"
 
 	AWS_ACCESS_KEY_ID     = "AWS_ACCESS_KEY_ID"
 	AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY"
@@ -82,10 +81,6 @@ const (
 )
 
 func (w *ResticWrapper) setupEnv() error {
-	// Set progress report frequency.
-	// 0.016666 is for one report per minute.
-	// ref: https://restic.readthedocs.io/en/stable/manual_rest.html
-	w.sh.SetEnv(RESTIC_PROGRESS_FPS, "0.016666")
 
 	if v, err := ioutil.ReadFile(filepath.Join(w.config.SecretDir, RESTIC_PASSWORD)); err != nil {
 		return err
