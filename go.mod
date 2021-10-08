@@ -8,14 +8,16 @@ require (
 	gomodules.xyz/flags v0.1.0
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.3
-	gomodules.xyz/x v0.0.5
+	gomodules.xyz/pointer v0.1.0
+	gomodules.xyz/x v0.0.8
+	k8s.io/api v0.21.1
 	k8s.io/apimachinery v0.21.1
 	k8s.io/client-go v0.21.1
 	k8s.io/klog/v2 v2.8.0
-	kmodules.xyz/client-go v0.0.0-20210719120358-dd0503cf99cf
-	kmodules.xyz/custom-resources v0.0.0-20210618003440-c6bb400da153
-	kmodules.xyz/offshoot-api v0.0.0-20210618005544-5217a24765da
-	stash.appscode.dev/apimachinery v0.15.0
+	kmodules.xyz/client-go v0.0.0-20210928133955-8df5bb467db6
+	kmodules.xyz/custom-resources v0.0.0-20211007080833-72bd9e8cae6e
+	kmodules.xyz/offshoot-api v0.0.0-20210829122105-6f4d481b0c61
+	stash.appscode.dev/apimachinery v0.15.1-0.20211008135320-561988c602a7
 )
 
 replace bitbucket.org/ww/goautoneg => gomodules.xyz/goautoneg v0.0.0-20120707110453-a547fc61f48d

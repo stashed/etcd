@@ -19,9 +19,9 @@ package pkg
 import (
 	"context"
 	"path/filepath"
-	"strconv"
 	"strings"
 
+	"stash.appscode.dev/apimachinery/apis"
 	api_v1beta1 "stash.appscode.dev/apimachinery/apis/stash/v1beta1"
 	stash "stash.appscode.dev/apimachinery/client/clientset/versioned"
 	"stash.appscode.dev/apimachinery/pkg/restic"
@@ -30,9 +30,11 @@ import (
 	"github.com/spf13/cobra"
 	license "go.bytebuilders.dev/license-verifier/kubernetes"
 	"gomodules.xyz/flags"
+	"gomodules.xyz/go-sh"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog/v2"
 	appcatalog "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
 	appcatalog_cs "kmodules.xyz/custom-resources/client/clientset/versioned"
 	v1 "kmodules.xyz/offshoot-api/api/v1"
@@ -42,7 +44,7 @@ func NewCmdBackup() *cobra.Command {
 	var (
 		masterURL      string
 		kubeconfigPath string
-		opt            = etcdOptions{
+		opt            = options{
 			waitTimeout: 300,
 			setupOptions: restic.SetupOptions{
 				ScratchDir:  restic.DefaultScratchDir,
@@ -52,6 +54,7 @@ func NewCmdBackup() *cobra.Command {
 				Host:          restic.DefaultHost,
 				StdinFileName: EtcdBackupFile,
 			},
+			etcd: etcd{interimDataDir: filepath.Join(apis.TmpDirMountPath, "data")},
 		}
 	)
 
@@ -103,6 +106,7 @@ func NewCmdBackup() *cobra.Command {
 						},
 					},
 				}
+				klog.Errorln(err)
 			}
 			// If output directory specified, then write the output in "output.json" file in the specified directory
 			if opt.outputDir != "" {
@@ -150,7 +154,7 @@ func NewCmdBackup() *cobra.Command {
 	return cmd
 }
 
-func (opt *etcdOptions) backupEtcd(targetRef api_v1beta1.TargetRef) (*restic.BackupOutput, error) {
+func (opt *options) backupEtcd(targetRef api_v1beta1.TargetRef) (*restic.BackupOutput, error) {
 	// if any pre-backup actions has been assigned to it, execute them
 	actionOptions := api_util.ActionOptions{
 		StashClient:       opt.stashClient,
@@ -184,42 +188,54 @@ func (opt *etcdOptions) backupEtcd(targetRef api_v1beta1.TargetRef) (*restic.Bac
 		return nil, err
 	}
 
-	// init restic wrapper
+	// clear the interim directory before running etcdctl snapshot save
+	klog.Infoln("Cleaning up directory: ", opt.etcd.interimDataDir)
+	if err := clearDir(opt.etcd.interimDataDir); err != nil {
+		return nil, err
+	}
+
+	opt.etcd.endpoint, err = opt.getEndpoint(appBinding)
+	if err != nil {
+		return nil, err
+	}
+
+	args := []string{"--endpoints", opt.etcd.endpoint}
+	creds, err := opt.getCredential(appBinding)
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, creds...)
+
+	args = append(args, "snapshot", "save")
+
+	//The directory where the backup data will be stored
+	args = append(args, filepath.Join(opt.etcd.interimDataDir, EtcdBackupFile))
+	args = append(args, strings.Fields(opt.etcdArgs)...)
+
+	etcdShell := sh.NewSession()
+	etcdShell.SetEnv("ETCDCTL_API", "3")
+
+	etcdShell.Command(EtcdBackupCMD, args)
+
+	// wait for DB ready
+	klog.Infoln("Waiting for the database to be ready...")
+	err = opt.waitForDBReady(creds)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := etcdShell.Run(); err != nil {
+		return nil, err
+	}
+
+	// Dumped data has been stored in the interim data dir. Now, we will backup this directory using Stash.
+	opt.backupOptions.BackupPaths = []string{opt.etcd.interimDataDir}
+
+	// Init restic wrapper
 	resticWrapper, err := restic.NewResticWrapper(opt.setupOptions)
 	if err != nil {
 		return nil, err
 	}
-
-	// set access credentials
-	err = opt.setCredentials(resticWrapper, appBinding)
-	if err != nil {
-		return nil, err
-	}
-
-	// setup pipe command
-	backupCmd := restic.Command{
-		Name: EtcdBackupCMD,
-		Args: []interface{}{
-			"-host", appBinding.Spec.ClientConfig.Service.Name,
-		},
-	}
-	for _, arg := range strings.Fields(opt.etcdArgs) {
-		backupCmd.Args = append(backupCmd.Args, arg)
-	}
-
-	// if port is specified, append port in the arguments
-	if appBinding.Spec.ClientConfig.Service.Port != 0 {
-		backupCmd.Args = append(backupCmd.Args, "-port", strconv.Itoa(int(appBinding.Spec.ClientConfig.Service.Port)))
-	}
-
-	// wait for DB ready
-	err = opt.waitForDBReady(appBinding)
-	if err != nil {
-		return nil, err
-	}
-
-	// add backup command in the pipeline
-	opt.backupOptions.StdinPipeCommands = append(opt.backupOptions.StdinPipeCommands, backupCmd)
 
 	// Run backup
 	return resticWrapper.RunBackup(opt.backupOptions, targetRef)
