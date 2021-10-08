@@ -47,6 +47,8 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(v.NewCmdVersion())
 	rootCmd.AddCommand(NewCmdBackup())
 	rootCmd.AddCommand(NewCmdRestore())
+	rootCmd.AddCommand(NewCmdRestoreMember())
+	rootCmd.AddCommand(NewCmdReplaceData())
 
 	return rootCmd
 }
