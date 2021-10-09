@@ -4,10 +4,10 @@ go 1.15
 
 require (
 	github.com/spf13/cobra v1.1.3
-	go.bytebuilders.dev/license-verifier/kubernetes v0.9.2
-	gomodules.xyz/flags v0.1.0
+	go.bytebuilders.dev/license-verifier/kubernetes v0.9.3
+	gomodules.xyz/flags v0.1.2
 	gomodules.xyz/go-sh v0.1.0
-	gomodules.xyz/logs v0.0.3
+	gomodules.xyz/logs v0.0.4
 	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/x v0.0.8
 	k8s.io/api v0.21.1
@@ -125,3 +125,5 @@ replace k8s.io/utils => k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 replace sigs.k8s.io/application => github.com/kmodules/application v0.8.4-0.20210427030912-90eeee3bc4ad
 
 replace github.com/satori/go.uuid => github.com/gofrs/uuid v4.0.0+incompatible
+
+replace github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.1+incompatible

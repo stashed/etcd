@@ -133,7 +133,7 @@ go.bytebuilders.dev/license-verifier
 go.bytebuilders.dev/license-verifier/apis/licenses
 go.bytebuilders.dev/license-verifier/apis/licenses/v1alpha1
 go.bytebuilders.dev/license-verifier/info
-# go.bytebuilders.dev/license-verifier/kubernetes v0.9.2
+# go.bytebuilders.dev/license-verifier/kubernetes v0.9.3
 ## explicit
 go.bytebuilders.dev/license-verifier/kubernetes
 # golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
@@ -169,7 +169,7 @@ golang.org/x/text/width
 golang.org/x/time/rate
 # gomodules.xyz/clock v0.0.0-20200817085942-06523dba733f
 gomodules.xyz/clock
-# gomodules.xyz/flags v0.1.0
+# gomodules.xyz/flags v0.1.2
 ## explicit
 gomodules.xyz/flags
 # gomodules.xyz/go-sh v0.1.0
@@ -179,7 +179,7 @@ gomodules.xyz/go-sh
 gomodules.xyz/homedir
 # gomodules.xyz/jsonpatch/v2 v2.2.0
 gomodules.xyz/jsonpatch/v2
-# gomodules.xyz/logs v0.0.3
+# gomodules.xyz/logs v0.0.4
 ## explicit
 gomodules.xyz/logs
 # gomodules.xyz/mergo v0.3.13-0.20210702100041-9d62ff8ece4d
@@ -666,3 +666,4 @@ stash.appscode.dev/apimachinery/pkg/util
 # k8s.io/utils => k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 # sigs.k8s.io/application => github.com/kmodules/application v0.8.4-0.20210427030912-90eeee3bc4ad
 # github.com/satori/go.uuid => github.com/gofrs/uuid v4.0.0+incompatible
+# github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.1+incompatible
