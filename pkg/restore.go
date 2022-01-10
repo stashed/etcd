@@ -64,7 +64,7 @@ func NewCmdRestore() *cobra.Command {
 		Short:             "Restores Etcd DB Backup",
 		DisableAutoGenTag: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			flags.EnsureRequiredFlags(cmd, "appbinding", "provider", "secret-dir", "data-dir", "initial-cluster", "workload-kind", "workload-name")
+			flags.EnsureRequiredFlags(cmd, "appbinding", "provider", "data-dir", "initial-cluster", "workload-kind", "workload-name", "storage-secret-name", "storage-secret-namespace")
 
 			// prepare client
 
@@ -140,13 +140,14 @@ func NewCmdRestore() *cobra.Command {
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
 	cmd.Flags().StringVar(&opt.namespace, "namespace", "default", "Namespace of Backup/Restore Session")
 	cmd.Flags().StringVar(&opt.appBindingName, "appbinding", opt.appBindingName, "Name of the app binding")
+	cmd.Flags().StringVar(&opt.storageSecret.Name, "storage-secret-name", opt.storageSecret.Name, "Name of the storage secret")
+	cmd.Flags().StringVar(&opt.storageSecret.Namespace, "storage-secret-namespace", opt.storageSecret.Namespace, "Namespace of the storage secret")
 
 	cmd.Flags().StringVar(&opt.setupOptions.Provider, "provider", opt.setupOptions.Provider, "Backend provider (i.e. gcs, s3, azure etc)")
 	cmd.Flags().StringVar(&opt.setupOptions.Bucket, "bucket", opt.setupOptions.Bucket, "Name of the cloud bucket/container (keep empty for local backend)")
 	cmd.Flags().StringVar(&opt.setupOptions.Endpoint, "endpoint", opt.setupOptions.Endpoint, "Endpoint for s3/s3 compatible backend or REST backend URL")
 	cmd.Flags().StringVar(&opt.setupOptions.Region, "region", opt.setupOptions.Region, "Region for s3/s3 compatible backend")
 	cmd.Flags().StringVar(&opt.setupOptions.Path, "path", opt.setupOptions.Path, "Directory inside the bucket where backup will be stored")
-	cmd.Flags().StringVar(&opt.setupOptions.SecretDir, "secret-dir", opt.setupOptions.SecretDir, "Directory where storage secret has been mounted")
 	cmd.Flags().StringVar(&opt.setupOptions.ScratchDir, "scratch-dir", opt.setupOptions.ScratchDir, "Temporary directory")
 	cmd.Flags().BoolVar(&opt.setupOptions.EnableCache, "enable-cache", opt.setupOptions.EnableCache, "Specify whether to enable caching for restic")
 	cmd.Flags().Int64Var(&opt.setupOptions.MaxConnections, "max-connections", opt.setupOptions.MaxConnections, "Specify maximum concurrent connections for GCS, Azure and B2 backend")
@@ -176,14 +177,12 @@ func NewCmdRestore() *cobra.Command {
 }
 
 func (opt *options) restoreEtcd() error {
-
-	// get app binding
 	appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.namespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	//Get the endpoint for etcd client from the service mentioned in the appbinding
+	//Get the endpoint for etcd client from the service/URL mentioned in the appbinding
 	opt.etcd.endpoint, err = opt.getEndpoint(appBinding)
 	if err != nil {
 		return err
@@ -208,7 +207,7 @@ func (opt *options) restoreEtcd() error {
 
 	klog.Infoln("Listing out member pods of etcd cluster")
 	// List out the pods used to deploy etcd cluster
-	memberPods, err := opt.getEtcdMemberPods()
+	memberPods, err := opt.getEtcdMemberPods(appBinding)
 	if err != nil {
 		return err
 	}
@@ -235,7 +234,7 @@ func (opt *options) restoreEtcd() error {
 
 		args = append(args, strings.Fields(opt.etcdArgs)...)
 
-		pod, err := opt.restoreEtcdMember(member, args)
+		pod, err := opt.restoreEtcdMember(member, args, appBinding)
 		if err != nil {
 			return err
 		}
@@ -248,9 +247,8 @@ func (opt *options) restoreEtcd() error {
 	if err != nil {
 		return err
 	}
-
 	klog.Infoln("Scaling down etcd workload...")
-	err = opt.scaleDownWorkload()
+	err = opt.scaleDownWorkload(appBinding)
 	if err != nil {
 		return err
 	}
@@ -262,7 +260,7 @@ func (opt *options) restoreEtcd() error {
 	}
 
 	klog.Infoln("Scaling up etcd workload...")
-	err = opt.scaleUpWorkload(int32(len(memberPods)))
+	err = opt.scaleUpWorkload(int32(len(memberPods)), appBinding)
 	if err != nil {
 		return err
 	}
