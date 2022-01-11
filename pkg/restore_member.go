@@ -166,13 +166,11 @@ func (opt *options) downloadSnapshot(targetRef api_v1beta1.TargetRef) error {
 		return err
 	}
 
-	// init restic wrapper
 	resticWrapper, err := restic.NewResticWrapper(opt.setupOptions)
 	if err != nil {
 		return err
 	}
 
-	// Run restore
 	_, err = resticWrapper.RunRestore(opt.restoreOptions, targetRef)
 	if err != nil {
 		return err
@@ -182,7 +180,6 @@ func (opt *options) downloadSnapshot(targetRef api_v1beta1.TargetRef) error {
 }
 
 func (opt *options) restoreSnapshot() error {
-	// get app binding
 	appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.namespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
 	if err != nil {
 		return err

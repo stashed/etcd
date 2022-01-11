@@ -198,7 +198,7 @@ func (opt *options) restoreEtcd() error {
 	if err != nil {
 		return err
 	}
-	//Wait for the DB ready
+
 	klog.Infoln("Waiting for the database to be ready...")
 	err = opt.waitForDBReady(creds)
 	if err != nil {
