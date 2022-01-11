@@ -207,7 +207,7 @@ func (opt *options) restoreEtcd() error {
 
 	klog.Infoln("Listing out member pods of etcd cluster")
 	// List out the pods used to deploy etcd cluster
-	memberPods, err := opt.getEtcdMemberPods(appBinding)
+	memberPods, err := opt.getEtcdMemberPods()
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (opt *options) restoreEtcd() error {
 
 		args = append(args, strings.Fields(opt.etcdArgs)...)
 
-		pod, err := opt.restoreEtcdMember(member, args, appBinding)
+		pod, err := opt.restoreEtcdMember(member, args)
 		if err != nil {
 			return err
 		}
@@ -248,7 +248,7 @@ func (opt *options) restoreEtcd() error {
 		return err
 	}
 	klog.Infoln("Scaling down etcd workload...")
-	err = opt.scaleDownWorkload(appBinding)
+	err = opt.scaleDownWorkload()
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func (opt *options) restoreEtcd() error {
 	}
 
 	klog.Infoln("Scaling up etcd workload...")
-	err = opt.scaleUpWorkload(int32(len(memberPods)), appBinding)
+	err = opt.scaleUpWorkload(int32(len(memberPods)))
 	if err != nil {
 		return err
 	}

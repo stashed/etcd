@@ -157,11 +157,11 @@ func clearDir(dir string) error {
 	return os.MkdirAll(dir, os.ModePerm)
 }
 
-func (opt *options) restoreEtcdMember(memberPod corev1.Pod, args []string, appBinding *appcatalog.AppBinding) (*corev1.Pod, error) {
+func (opt *options) restoreEtcdMember(memberPod corev1.Pod, args []string) (*corev1.Pod, error) {
 	restoreArgs := opt.getRestoreArgs()
 	restoreArgs = append(restoreArgs, args...)
 	klog.Infoln("Creating restore interim pod...")
-	restorePod, err := opt.createRestorePods(memberPod, restoreArgs, appBinding)
+	restorePod, err := opt.createRestorePods(memberPod, restoreArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (opt *options) restoreEtcdMember(memberPod corev1.Pod, args []string, appBi
 	return restorePod, nil
 }
 
-func (opt *options) createRestorePods(memberPod corev1.Pod, args []string, appBinding *appcatalog.AppBinding) (*corev1.Pod, error) {
+func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*corev1.Pod, error) {
 	volumes := make([]corev1.Volume, 0)
 
 	// Getting the volume which is mounted containing the data dir
@@ -224,7 +224,7 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string, appBi
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      meta.ValidNameWithPrefix(RestorePodPrefix, memberPod.Name),
-			Namespace: appBinding.Spec.ClientConfig.Service.Namespace,
+			Namespace: opt.namespace,
 			Labels:    opt.invoker.Labels,
 		},
 		Spec: corev1.PodSpec{
@@ -295,10 +295,10 @@ func (opt *options) replaceOldDataWithRestoredData(restorePods []corev1.Pod) err
 	return nil
 }
 
-func (opt *options) scaleDownWorkload(appBinding *appcatalog.AppBinding) error {
+func (opt *options) scaleDownWorkload() error {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
-		ss, err := opt.kubeClient.AppsV1().StatefulSets(appBinding.Spec.ClientConfig.Service.Namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -328,10 +328,10 @@ func (opt *options) scaleDownWorkload(appBinding *appcatalog.AppBinding) error {
 	return nil
 }
 
-func (opt *options) scaleUpWorkload(numberOfMembersInEtcdCluster int32, appBinding *appcatalog.AppBinding) error {
+func (opt *options) scaleUpWorkload(numberOfMembersInEtcdCluster int32) error {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
-		ss, err := opt.kubeClient.AppsV1().StatefulSets(appBinding.Spec.ClientConfig.Service.Namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -361,10 +361,10 @@ func (opt *options) scaleUpWorkload(numberOfMembersInEtcdCluster int32, appBindi
 	return nil
 }
 
-func (opt *options) getEtcdMemberPods(appBinding *appcatalog.AppBinding) ([]corev1.Pod, error) {
+func (opt *options) getEtcdMemberPods() ([]corev1.Pod, error) {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
-		ss, err := opt.kubeClient.AppsV1().StatefulSets(appBinding.Spec.ClientConfig.Service.Namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -376,14 +376,14 @@ func (opt *options) getEtcdMemberPods(appBinding *appcatalog.AppBinding) ([]core
 			return nil, err
 		}
 
-		pods, err := opt.kubeClient.CoreV1().Pods(appBinding.Spec.ClientConfig.Service.Namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
+		pods, err := opt.kubeClient.CoreV1().Pods(opt.namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 		if err != nil {
 			return nil, err
 		}
 		return pods.Items, nil
 
 	case apis.KindPod:
-		pod, err := opt.kubeClient.CoreV1().Pods(appBinding.Spec.ClientConfig.Service.Namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		pod, err := opt.kubeClient.CoreV1().Pods(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
