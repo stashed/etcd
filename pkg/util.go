@@ -46,6 +46,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/klog/v2"
 	kutil "kmodules.xyz/client-go"
+	kmapi "kmodules.xyz/client-go/api/v1"
 	apps_util "kmodules.xyz/client-go/apps/v1"
 	core_util "kmodules.xyz/client-go/core/v1"
 	"kmodules.xyz/client-go/meta"
@@ -60,7 +61,6 @@ const (
 	EtcdBackupFile     = "snapshot.db"
 	EtcdBackupCMD      = "etcdctl"
 	EtcdRestoreCMD     = "etcdctl"
-	EtcdSecretDir      = "/etc/secret"
 	EtcdScratchDir     = "/tmp"
 	EtcdCAcertFile     = "root.pem"
 	EtcdClientCertFile = "client.pem"
@@ -85,6 +85,7 @@ type options struct {
 	etcdArgs          string
 	waitTimeout       int32
 	outputDir         string
+	storageSecret     kmapi.ObjectReference
 
 	etcd etcd
 
@@ -170,7 +171,6 @@ func (opt *options) restoreEtcdMember(memberPod corev1.Pod, args []string) (*cor
 
 func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*corev1.Pod, error) {
 	volumes := make([]corev1.Volume, 0)
-	volumes = upsertSecretVolume(volumes, opt.repositorySecretName)
 
 	// Getting the volume which is mounted containing the data dir
 	var dataVolume, dataVolumeMountPath, pvcName string
@@ -245,10 +245,6 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 						},
 					},
 					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      apis.StashSecretVolume,
-							MountPath: EtcdSecretDir,
-						},
 						{
 							Name:      dataVolume,
 							MountPath: dataVolumeMountPath,
@@ -434,17 +430,6 @@ func (opt *options) execCommandOnPod(pod *corev1.Pod, containerName string, comm
 	return execOut.Bytes(), nil
 }
 
-func upsertSecretVolume(volumes []corev1.Volume, secretName string) []corev1.Volume {
-	return core_util.UpsertVolume(volumes, corev1.Volume{
-		Name: apis.StashSecretVolume,
-		VolumeSource: corev1.VolumeSource{
-			Secret: &corev1.SecretVolumeSource{
-				SecretName: secretName,
-			},
-		},
-	})
-}
-
 func waitUntilPodReady(c kubernetes.Interface, meta metav1.ObjectMeta) error {
 	return wait.PollImmediate(kutil.RetryInterval, 5*time.Minute, func() (bool, error) {
 		if obj, err := c.CoreV1().Pods(meta.Namespace).Get(context.TODO(), meta.Name, metav1.GetOptions{}); err == nil {
@@ -501,16 +486,16 @@ func (opt *options) waitUntilScalingCompleted() error {
 
 func (opt *options) getRestoreArgs() []string {
 	args := []string{StashEtcd, "restore-member"}
-
 	args = append(args, "--appbinding="+opt.appBindingName)
 	args = append(args, "--namespace="+opt.namespace)
+	args = append(args, "--storage-secret-name="+opt.storageSecret.Name)
+	args = append(args, "--storage-secret-namespace="+opt.storageSecret.Namespace)
 	args = append(args, "--kubeconfig=")
 	args = append(args, "--provider="+opt.setupOptions.Provider)
 	args = append(args, "--bucket="+opt.setupOptions.Bucket)
 	args = append(args, "--endpoint="+opt.setupOptions.Endpoint)
 	args = append(args, "--region="+opt.setupOptions.Region)
 	args = append(args, "--path="+opt.setupOptions.Path)
-	args = append(args, "--secret-dir="+EtcdSecretDir)
 	args = append(args, "--scratch-dir="+EtcdScratchDir)
 	args = append(args, "--enable-cache="+fmt.Sprintf("%v", opt.setupOptions.EnableCache))
 	args = append(args, "--max-connections="+fmt.Sprintf("%v", opt.setupOptions.MaxConnections))
@@ -528,7 +513,6 @@ func (opt *options) getCredential(appBinding *appcatalog.AppBinding) ([]string, 
 		return args, nil
 	}
 
-	// get secret
 	appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(opt.namespace).Get(context.TODO(), appBinding.Spec.Secret.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -579,13 +563,17 @@ func (opt *options) getCredential(appBinding *appcatalog.AppBinding) ([]string, 
 }
 
 func (opt *options) getEndpoint(appBinding *appcatalog.AppBinding) (string, error) {
-	if appBinding.Spec.ClientConfig.Service.Name == "" {
-		return "", fmt.Errorf("Could not found service-name in Appbinding: %v", appBinding.Name)
+	endpoint, err := appBinding.Hostname()
+	if err != nil {
+		return "", err
 	}
 
-	endpoint := appBinding.Spec.ClientConfig.Service.Name
+	port, err := appBinding.Port()
+	if err != nil {
+		return "", err
+	}
 
-	if appBinding.Spec.ClientConfig.Service.Port != 0 {
+	if port != 0 {
 		endpoint = endpoint + ":" + strconv.Itoa(int(appBinding.Spec.ClientConfig.Service.Port))
 	}
 	return endpoint, nil
