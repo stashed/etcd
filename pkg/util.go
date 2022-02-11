@@ -214,8 +214,8 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 		VolumeSource: corev1.VolumeSource{
 
 			EmptyDir: &corev1.EmptyDirVolumeSource{
-				Medium:    opt.invoker.TargetsInfo[0].TempDir.Medium,
-				SizeLimit: opt.invoker.TargetsInfo[0].TempDir.SizeLimit,
+				Medium:    opt.invoker.GetTargetInfo()[0].TempDir.Medium,
+				SizeLimit: opt.invoker.GetTargetInfo()[0].TempDir.SizeLimit,
 			},
 		},
 	}
@@ -225,7 +225,7 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      meta.ValidNameWithPrefix(RestorePodPrefix, memberPod.Name),
 			Namespace: opt.namespace,
-			Labels:    opt.invoker.Labels,
+			Labels:    opt.invoker.GetLabels(),
 		},
 		Spec: corev1.PodSpec{
 			Volumes: volumes,
@@ -255,7 +255,7 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 						},
 					},
 					ImagePullPolicy: corev1.PullIfNotPresent,
-					SecurityContext: opt.invoker.TargetsInfo[0].RuntimeSettings.Container.SecurityContext,
+					SecurityContext: opt.invoker.GetTargetInfo()[0].RuntimeSettings.Container.SecurityContext,
 				},
 			},
 			RestartPolicy:      corev1.RestartPolicyOnFailure,
@@ -265,7 +265,7 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 
 	createdPod, _, err := core_util.CreateOrPatchPod(context.TODO(), opt.kubeClient, pod.ObjectMeta, func(in *corev1.Pod) *corev1.Pod {
 		// Set RestoreSession as owner of the PVC so that it get deleted when the respective owner is deleted.
-		core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.OwnerRef)
+		core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.GetOwnerRef())
 		in.Spec = pod.Spec
 		return in
 	}, metav1.PatchOptions{})

@@ -88,7 +88,7 @@ func NewCmdRestoreMember() *cobra.Command {
 			}
 
 			//Get the restore invoker information
-			opt.invoker, err = invoker.ExtractRestoreInvokerInfo(opt.kubeClient, opt.stashClient, opt.invokerKind, opt.invokerName, opt.namespace)
+			opt.invoker, err = invoker.NewRestoreInvoker(opt.kubeClient, opt.stashClient, opt.invokerKind, opt.invokerName, opt.namespace)
 			if err != nil {
 				return err
 			}
@@ -219,8 +219,7 @@ func (opt *options) updateHostRestoreStatus(targetRef api_v1beta1.TargetRef, pha
 		}
 	}
 
-	var statErr error
-	_, statErr = opt.invoker.UpdateRestoreInvokerStatus(invoker.RestoreInvokerStatus{
+	return opt.invoker.UpdateStatus(invoker.RestoreInvokerStatus{
 		TargetStatus: []api_v1beta1.RestoreMemberStatus{
 			{
 				Ref: targetRef,
@@ -234,5 +233,4 @@ func (opt *options) updateHostRestoreStatus(targetRef api_v1beta1.TargetRef, pha
 			},
 		},
 	})
-	return statErr
 }
