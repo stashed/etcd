@@ -50,7 +50,7 @@ func (opt *options) ensureServiceAccount() error {
 	saMeta := metav1.ObjectMeta{
 		Name:      opt.invokerName,
 		Namespace: opt.namespace,
-		Labels:    opt.invoker.Labels,
+		Labels:    opt.invoker.GetLabels(),
 	}
 
 	_, _, err := core_util.CreateOrPatchServiceAccount(
@@ -58,8 +58,8 @@ func (opt *options) ensureServiceAccount() error {
 		opt.kubeClient,
 		saMeta,
 		func(in *corev1.ServiceAccount) *corev1.ServiceAccount {
-			core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.OwnerRef)
-			in.Labels = opt.invoker.Labels
+			core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.GetOwnerRef())
+			in.Labels = opt.invoker.GetLabels()
 			return in
 		},
 		metav1.PatchOptions{},
@@ -73,11 +73,11 @@ func (opt *options) ensureRole() error {
 	meta := metav1.ObjectMeta{
 		Name:      opt.invokerName,
 		Namespace: opt.namespace,
-		Labels:    opt.invoker.Labels,
+		Labels:    opt.invoker.GetLabels(),
 	}
 
 	_, _, err := rbac_util.CreateOrPatchRole(context.TODO(), opt.kubeClient, meta, func(in *rbac.Role) *rbac.Role {
-		core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.OwnerRef)
+		core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.GetOwnerRef())
 		in.Rules = []rbac.PolicyRule{
 			{
 				APIGroups: []string{api_v1beta1.SchemeGroupVersion.Group},
@@ -111,11 +111,11 @@ func (opt *options) ensureRoleBinding() error {
 	meta := metav1.ObjectMeta{
 		Namespace: opt.namespace,
 		Name:      opt.invokerName,
-		Labels:    opt.invoker.Labels,
+		Labels:    opt.invoker.GetLabels(),
 	}
 
 	_, _, err := rbac_util.CreateOrPatchRoleBinding(context.TODO(), opt.kubeClient, meta, func(in *rbac.RoleBinding) *rbac.RoleBinding {
-		core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.OwnerRef)
+		core_util.EnsureOwnerReference(&in.ObjectMeta, opt.invoker.GetOwnerRef())
 
 		in.RoleRef = rbac.RoleRef{
 			APIGroup: rbac.GroupName,

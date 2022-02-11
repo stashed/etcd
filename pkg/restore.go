@@ -91,7 +91,7 @@ func NewCmdRestore() *cobra.Command {
 			opt.config = config
 
 			//Get the restore invoker information
-			opt.invoker, err = invoker.ExtractRestoreInvokerInfo(opt.kubeClient, opt.stashClient, opt.invokerKind, opt.invokerName, opt.namespace)
+			opt.invoker, err = invoker.NewRestoreInvoker(opt.kubeClient, opt.stashClient, opt.invokerKind, opt.invokerName, opt.namespace)
 			if err != nil {
 				return err
 			}
@@ -107,23 +107,34 @@ func NewCmdRestore() *cobra.Command {
 			}
 
 			// Set RestoreCompleted Condition to False
-			err = conditions.SetRestoreCompletedConditionToFalse(opt.invoker, targetRef, "Restore process in progress.")
+			err = conditions.SetRestoreCompletedConditionToFalse(opt.invoker, &targetRef, "Restore process in progress.")
 			if err != nil {
 				return err
 			}
 
 			restoreErr := opt.restoreEtcd()
 			if restoreErr != nil {
-				targetStats.Phase = api_v1beta1.TargetRestoreFailed
+				targetStats.Stats = []api_v1beta1.HostRestoreStats{
+					{
+						Hostname: opt.restoreOptions.Host,
+						Phase:    api_v1beta1.HostRestoreFailed,
+						Error:    restoreErr.Error(),
+					},
+				}
 				// Don't return the error. Just log it so that update-status function can update the restore invoker status properly.
 				klog.Errorln(restoreErr)
 			} else {
-				targetStats.Phase = api_v1beta1.TargetRestoreSucceeded
+				targetStats.Stats = []api_v1beta1.HostRestoreStats{
+					{
+						Hostname: opt.restoreOptions.Host,
+						Phase:    api_v1beta1.HostRestoreSucceeded,
+					},
+				}
 			}
 			var restoreOutput = &restic.RestoreOutput{RestoreTargetStatus: targetStats}
 
 			// Set RestoreCompleted Condition to True
-			err = conditions.SetRestoreCompletedConditionToTrue(opt.invoker, targetRef, "All steps of restore process has been executed")
+			err = conditions.SetRestoreCompletedConditionToTrue(opt.invoker, &targetRef, "All steps of restore process has been executed")
 			if err != nil {
 				return err
 			}
