@@ -101,7 +101,6 @@ func (opt *options) ensureRole() error {
 			},
 		}
 		return in
-
 	}, metav1.PatchOptions{})
 
 	return err
