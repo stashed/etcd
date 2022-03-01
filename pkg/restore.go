@@ -90,7 +90,7 @@ func NewCmdRestore() *cobra.Command {
 			}
 			opt.config = config
 
-			//Get the restore invoker information
+			// Get the restore invoker information
 			opt.invoker, err = invoker.NewRestoreInvoker(opt.kubeClient, opt.stashClient, opt.invokerKind, opt.invokerName, opt.namespace)
 			if err != nil {
 				return err
@@ -131,7 +131,7 @@ func NewCmdRestore() *cobra.Command {
 					},
 				}
 			}
-			var restoreOutput = &restic.RestoreOutput{RestoreTargetStatus: targetStats}
+			restoreOutput := &restic.RestoreOutput{RestoreTargetStatus: targetStats}
 
 			// Set RestoreCompleted Condition to True
 			err = conditions.SetRestoreCompletedConditionToTrue(opt.invoker, &targetRef, "All steps of restore process has been executed")
@@ -193,7 +193,7 @@ func (opt *options) restoreEtcd() error {
 		return err
 	}
 
-	//Get the endpoint for etcd client from the service/URL mentioned in the appbinding
+	// Get the endpoint for etcd client from the service/URL mentioned in the appbinding
 	opt.etcd.endpoint, err = opt.getEndpoint(appBinding)
 	if err != nil {
 		return err
@@ -252,7 +252,7 @@ func (opt *options) restoreEtcd() error {
 		restorePods = append(restorePods, *pod)
 	}
 
-	//Wait until the restore gets applied for every member in the restore dir from the temporary download directory
+	// Wait until the restore gets applied for every member in the restore dir from the temporary download directory
 	klog.Infoln("Waiting for snapshot getting restored...")
 	err = opt.waitUntilRestoreComplete(len(memberPods))
 	if err != nil {

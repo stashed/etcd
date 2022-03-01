@@ -87,7 +87,7 @@ func NewCmdRestoreMember() *cobra.Command {
 				Name:       opt.appBindingName,
 			}
 
-			//Get the restore invoker information
+			// Get the restore invoker information
 			opt.invoker, err = invoker.NewRestoreInvoker(opt.kubeClient, opt.stashClient, opt.invokerKind, opt.invokerName, opt.namespace)
 			if err != nil {
 				return err
@@ -139,7 +139,7 @@ func NewCmdRestoreMember() *cobra.Command {
 	cmd.Flags().StringVar(&opt.invokerKind, "invoker-kind", opt.invokerKind, "Type of the restore invoker")
 	cmd.Flags().StringVar(&opt.invokerName, "invoker-name", opt.invokerName, "Name of the restore invoker")
 
-	//Restore flags
+	// Restore flags
 	cmd.Flags().StringVar(&downloadDir, "download-dir", downloadDir, "Directory where Snapshots get downloaded")
 	cmd.Flags().StringVar(&name, "name", name, "Name of the etcd member to be restored")
 	cmd.Flags().StringVar(&initialAdvertisePeerUrl, "initial-advertise-peer-urls", initialAdvertisePeerUrl, "Initial advertise peer urls for etcd cluster")

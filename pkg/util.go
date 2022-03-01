@@ -122,6 +122,7 @@ func NewSessionWrapper() *SessionWrapper {
 		shell.NewSession(),
 	}
 }
+
 func (wrapper *SessionWrapper) SetEnv(key, value string) {
 	wrapper.Session.SetEnv(key, value)
 }
@@ -201,7 +202,6 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 	vol := corev1.Volume{
 		Name: dataVolume,
 		VolumeSource: corev1.VolumeSource{
-
 			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 				ClaimName: pvcName,
 			},
@@ -212,7 +212,6 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 	vol = corev1.Volume{
 		Name: apis.TmpDirVolumeName,
 		VolumeSource: corev1.VolumeSource{
-
 			EmptyDir: &corev1.EmptyDirVolumeSource{
 				Medium:    opt.invoker.GetTargetInfo()[0].TempDir.Medium,
 				SizeLimit: opt.invoker.GetTargetInfo()[0].TempDir.SizeLimit,
