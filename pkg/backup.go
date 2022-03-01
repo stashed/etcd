@@ -114,7 +114,6 @@ func NewCmdBackup() *cobra.Command {
 			}
 
 			return nil
-
 		},
 	}
 
@@ -213,7 +212,7 @@ func (opt *options) backupEtcd(targetRef api_v1beta1.TargetRef) (*restic.BackupO
 
 	args = append(args, "snapshot", "save")
 
-	//The directory where the backup data will be stored
+	// The directory where the backup data will be stored
 	args = append(args, filepath.Join(opt.etcd.interimDataDir, EtcdBackupFile))
 	args = append(args, strings.Fields(opt.etcdArgs)...)
 
