@@ -79,13 +79,14 @@ type options struct {
 
 	repositorySecretName string
 
-	namespace         string
-	backupSessionName string
-	appBindingName    string
-	etcdArgs          string
-	waitTimeout       int32
-	outputDir         string
-	storageSecret     kmapi.ObjectReference
+	namespace           string
+	backupSessionName   string
+	appBindingName      string
+	appBindingNamespace string
+	etcdArgs            string
+	waitTimeout         int32
+	outputDir           string
+	storageSecret       kmapi.ObjectReference
 
 	etcd etcd
 
