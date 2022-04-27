@@ -224,7 +224,7 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      meta.ValidNameWithPrefix(RestorePodPrefix, memberPod.Name),
-			Namespace: opt.namespace,
+			Namespace: opt.appBindingNamespace,
 			Labels:    opt.invoker.GetLabels(),
 		},
 		Spec: corev1.PodSpec{
@@ -298,7 +298,7 @@ func (opt *options) replaceOldDataWithRestoredData(restorePods []corev1.Pod) err
 func (opt *options) scaleDownWorkload() error {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
-		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.appBindingNamespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -331,7 +331,7 @@ func (opt *options) scaleDownWorkload() error {
 func (opt *options) scaleUpWorkload(numberOfMembersInEtcdCluster int32) error {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
-		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.appBindingNamespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -364,7 +364,7 @@ func (opt *options) scaleUpWorkload(numberOfMembersInEtcdCluster int32) error {
 func (opt *options) getEtcdMemberPods() ([]corev1.Pod, error) {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
-		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.appBindingNamespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -376,14 +376,14 @@ func (opt *options) getEtcdMemberPods() ([]corev1.Pod, error) {
 			return nil, err
 		}
 
-		pods, err := opt.kubeClient.CoreV1().Pods(opt.namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
+		pods, err := opt.kubeClient.CoreV1().Pods(opt.appBindingNamespace).List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 		if err != nil {
 			return nil, err
 		}
 		return pods.Items, nil
 
 	case apis.KindPod:
-		pod, err := opt.kubeClient.CoreV1().Pods(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+		pod, err := opt.kubeClient.CoreV1().Pods(opt.appBindingNamespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -467,7 +467,7 @@ func (opt *options) waitUntilScalingCompleted() error {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
 		return wait.PollImmediate(kutil.RetryInterval, time.Second*time.Duration(opt.waitTimeout), func() (bool, error) {
-			ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
+			ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.appBindingNamespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 			if err != nil {
 				return false, err
 			}
@@ -487,7 +487,7 @@ func (opt *options) waitUntilScalingCompleted() error {
 func (opt *options) getRestoreArgs() []string {
 	args := []string{StashEtcd, "restore-member"}
 	args = append(args, "--appbinding="+opt.appBindingName)
-	args = append(args, "--namespace="+opt.namespace)
+	args = append(args, "--namespace="+opt.appBindingNamespace)
 	args = append(args, "--storage-secret-name="+opt.storageSecret.Name)
 	args = append(args, "--storage-secret-namespace="+opt.storageSecret.Namespace)
 	args = append(args, "--kubeconfig=")
@@ -513,7 +513,7 @@ func (opt *options) getCredential(appBinding *appcatalog.AppBinding) ([]string, 
 		return args, nil
 	}
 
-	appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(opt.namespace).Get(context.TODO(), appBinding.Spec.Secret.Name, metav1.GetOptions{})
+	appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(appBinding.Namespace).Get(context.TODO(), appBinding.Spec.Secret.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
