@@ -190,7 +190,12 @@ func NewCmdRestore() *cobra.Command {
 }
 
 func (opt *options) restoreEtcd() error {
-	appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.appBindingNamespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
+
+	if opt.appBindingNamespace != opt.namespace {
+		return fmt.Errorf("RestoreSession and targetted Appbinding must be in the same namespace. Found RestoreSession in %q namespace and Appbinding in %q namespace", opt.appBindingNamespace, opt.namespace)
+	}
+
+	appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.namespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
