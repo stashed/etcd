@@ -49,7 +49,7 @@ func (opt *options) ensureServiceAccount() error {
 	// Creating serviceaccount for etcd interim pods
 	saMeta := metav1.ObjectMeta{
 		Name:      opt.invokerName,
-		Namespace: opt.namespace,
+		Namespace: opt.appBindingNamespace,
 		Labels:    opt.invoker.GetLabels(),
 	}
 
@@ -72,7 +72,7 @@ func (opt *options) ensureRole() error {
 	// Creating role for etcd interim pods
 	meta := metav1.ObjectMeta{
 		Name:      opt.invokerName,
-		Namespace: opt.namespace,
+		Namespace: opt.appBindingNamespace,
 		Labels:    opt.invoker.GetLabels(),
 	}
 
@@ -108,7 +108,7 @@ func (opt *options) ensureRole() error {
 
 func (opt *options) ensureRoleBinding() error {
 	meta := metav1.ObjectMeta{
-		Namespace: opt.namespace,
+		Namespace: opt.appBindingNamespace,
 		Name:      opt.invokerName,
 		Labels:    opt.invoker.GetLabels(),
 	}
@@ -125,7 +125,7 @@ func (opt *options) ensureRoleBinding() error {
 			{
 				Kind:      rbac.ServiceAccountKind,
 				Name:      opt.invokerName,
-				Namespace: opt.namespace,
+				Namespace: opt.appBindingNamespace,
 			},
 		}
 		return in
