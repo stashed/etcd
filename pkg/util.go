@@ -79,13 +79,14 @@ type options struct {
 
 	repositorySecretName string
 
-	namespace         string
-	backupSessionName string
-	appBindingName    string
-	etcdArgs          string
-	waitTimeout       int32
-	outputDir         string
-	storageSecret     kmapi.ObjectReference
+	namespace           string
+	backupSessionName   string
+	appBindingName      string
+	appBindingNamespace string
+	etcdArgs            string
+	waitTimeout         int32
+	outputDir           string
+	storageSecret       kmapi.ObjectReference
 
 	etcd etcd
 
@@ -512,7 +513,7 @@ func (opt *options) getCredential(appBinding *appcatalog.AppBinding) ([]string, 
 		return args, nil
 	}
 
-	appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(opt.namespace).Get(context.TODO(), appBinding.Spec.Secret.Name, metav1.GetOptions{})
+	appBindingSecret, err := opt.kubeClient.CoreV1().Secrets(appBinding.Namespace).Get(context.TODO(), appBinding.Spec.Secret.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

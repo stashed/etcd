@@ -85,6 +85,7 @@ func NewCmdRestoreMember() *cobra.Command {
 				APIVersion: appcatalog.SchemeGroupVersion.String(),
 				Kind:       appcatalog.ResourceKindApp,
 				Name:       opt.appBindingName,
+				Namespace:  opt.namespace,
 			}
 
 			// Get the restore invoker information
@@ -117,6 +118,7 @@ func NewCmdRestoreMember() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&opt.appBindingName, "appbinding", opt.appBindingName, "Name of the app binding")
+	cmd.Flags().StringVar(&opt.appBindingNamespace, "appbinding-namespace", opt.appBindingNamespace, "Namespace of the app binding")
 	cmd.Flags().StringVar(&masterURL, "master", masterURL, "The address of the Kubernetes API server (overrides any value in kubeconfig)")
 	cmd.Flags().StringVar(&kubeconfigPath, "kubeconfig", kubeconfigPath, "Path to kubeconfig file with authorization information (the master location is set by the master flag).")
 	cmd.Flags().StringVar(&opt.namespace, "namespace", "default", "Namespace of Backup/Restore Session")
