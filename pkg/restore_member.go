@@ -85,7 +85,7 @@ func NewCmdRestoreMember() *cobra.Command {
 				APIVersion: appcatalog.SchemeGroupVersion.String(),
 				Kind:       appcatalog.ResourceKindApp,
 				Name:       opt.appBindingName,
-				Namespace:  opt.appBindingNamespace,
+				Namespace:  opt.namespace,
 			}
 
 			// Get the restore invoker information
@@ -182,7 +182,7 @@ func (opt *options) downloadSnapshot(targetRef api_v1beta1.TargetRef) error {
 }
 
 func (opt *options) restoreSnapshot() error {
-	appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.appBindingNamespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
+	appBinding, err := opt.catalogClient.AppcatalogV1alpha1().AppBindings(opt.namespace).Get(context.TODO(), opt.appBindingName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
