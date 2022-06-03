@@ -36,6 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 	appcatalog "kmodules.xyz/custom-resources/apis/appcatalog/v1alpha1"
@@ -69,10 +70,6 @@ func NewCmdRestore() *cobra.Command {
 			// prepare client
 
 			config, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfigPath)
-			if err != nil {
-				return err
-			}
-			err = license.CheckLicenseEndpoint(config, licenseApiService, SupportedProducts)
 			if err != nil {
 				return err
 			}
@@ -113,7 +110,7 @@ func NewCmdRestore() *cobra.Command {
 				return err
 			}
 
-			restoreErr := opt.restoreEtcd()
+			restoreErr := opt.restoreEtcd(config)
 			if restoreErr != nil {
 				targetStats.Stats = []api_v1beta1.HostRestoreStats{
 					{
@@ -189,7 +186,12 @@ func NewCmdRestore() *cobra.Command {
 	return cmd
 }
 
-func (opt *options) restoreEtcd() error {
+func (opt *options) restoreEtcd(config *restclient.Config) error {
+	err := license.CheckLicenseEndpoint(config, licenseApiService, SupportedProducts)
+	if err != nil {
+		return err
+	}
+
 	if opt.appBindingNamespace != opt.namespace {
 		return fmt.Errorf("RestoreSession and targetted Appbinding must be in the same namespace. Found RestoreSession in %q namespace and Appbinding in %q namespace", opt.appBindingNamespace, opt.namespace)
 	}
