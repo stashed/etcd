@@ -72,10 +72,6 @@ func NewCmdRestore() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = license.CheckLicenseEndpoint(config, licenseApiService, SupportedProducts)
-			if err != nil {
-				return err
-			}
 			opt.kubeClient, err = kubernetes.NewForConfig(config)
 			if err != nil {
 				return err
@@ -190,6 +186,11 @@ func NewCmdRestore() *cobra.Command {
 }
 
 func (opt *options) restoreEtcd() error {
+	err := license.CheckLicenseEndpoint(opt.config, licenseApiService, SupportedProducts)
+	if err != nil {
+		return err
+	}
+
 	if opt.appBindingNamespace != opt.namespace {
 		return fmt.Errorf("RestoreSession and targetted Appbinding must be in the same namespace. Found RestoreSession in %q namespace and Appbinding in %q namespace", opt.appBindingNamespace, opt.namespace)
 	}
