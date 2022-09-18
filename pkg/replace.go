@@ -17,7 +17,6 @@ limitations under the License.
 package pkg
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -49,7 +48,7 @@ func NewCmdReplaceData() *cobra.Command {
 
 func replaceData() error {
 	// Read current files in the data directory
-	files, err := ioutil.ReadDir(dataDir)
+	files, err := os.ReadDir(dataDir)
 	if err != nil {
 		return err
 	}
@@ -66,7 +65,7 @@ func replaceData() error {
 
 	// Read files in the restore directory
 	restoreDir := filepath.Join(dataDir, RestoreDirSuffix)
-	files, err = ioutil.ReadDir(restoreDir)
+	files, err = os.ReadDir(restoreDir)
 	if err != nil {
 		return err
 	}

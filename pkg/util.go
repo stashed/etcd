@@ -21,7 +21,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -525,7 +524,7 @@ func (opt *options) getCredential(appBinding *appcatalog.AppBinding) ([]string, 
 	}
 
 	if appBinding.Spec.ClientConfig.CABundle != nil {
-		if err := ioutil.WriteFile(filepath.Join(opt.setupOptions.ScratchDir, EtcdCAcertFile), appBinding.Spec.ClientConfig.CABundle, os.ModePerm); err != nil {
+		if err := os.WriteFile(filepath.Join(opt.setupOptions.ScratchDir, EtcdCAcertFile), appBinding.Spec.ClientConfig.CABundle, os.ModePerm); err != nil {
 			return nil, err
 		}
 		tlsArgs := fmt.Sprintf("--cacert=%v", filepath.Join(opt.setupOptions.ScratchDir, EtcdCAcertFile))
@@ -535,13 +534,13 @@ func (opt *options) getCredential(appBinding *appcatalog.AppBinding) ([]string, 
 		key, keyExist := appBindingSecret.Data[EtcdClientKeyFile]
 
 		if certExist && keyExist {
-			if err := ioutil.WriteFile(filepath.Join(opt.setupOptions.ScratchDir, EtcdClientCertFile), cert, os.ModePerm); err != nil {
+			if err := os.WriteFile(filepath.Join(opt.setupOptions.ScratchDir, EtcdClientCertFile), cert, os.ModePerm); err != nil {
 				return nil, err
 			}
 			tlsArgs = fmt.Sprintf("--cert=%v", filepath.Join(opt.setupOptions.ScratchDir, EtcdClientCertFile))
 			args = append(args, tlsArgs)
 
-			if err := ioutil.WriteFile(filepath.Join(opt.setupOptions.ScratchDir, EtcdClientKeyFile), key, os.ModePerm); err != nil {
+			if err := os.WriteFile(filepath.Join(opt.setupOptions.ScratchDir, EtcdClientKeyFile), key, os.ModePerm); err != nil {
 				return nil, err
 			}
 			tlsArgs = fmt.Sprintf("--key=%v", filepath.Join(opt.setupOptions.ScratchDir, EtcdClientKeyFile))
