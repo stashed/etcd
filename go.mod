@@ -4,17 +4,17 @@ go 1.21.5
 
 require (
 	github.com/spf13/cobra v1.7.0
-	go.bytebuilders.dev/license-verifier/kubernetes v0.12.0
+	go.bytebuilders.dev/license-verifier/kubernetes v0.13.4
 	gomodules.xyz/flags v0.1.3
 	gomodules.xyz/go-sh v0.1.0
-	gomodules.xyz/logs v0.0.6
+	gomodules.xyz/logs v0.0.7
 	gomodules.xyz/pointer v0.1.0
 	gomodules.xyz/x v0.0.15
 	k8s.io/api v0.29.0
 	k8s.io/apimachinery v0.29.0
 	k8s.io/client-go v0.29.0
 	k8s.io/klog/v2 v2.110.1
-	kmodules.xyz/client-go v0.29.3
+	kmodules.xyz/client-go v0.29.5
 	kmodules.xyz/custom-resources v0.29.0
 	kmodules.xyz/offshoot-api v0.29.0
 	stash.appscode.dev/apimachinery v0.32.1-0.20240206075719-41610d0ce38f
@@ -58,10 +58,10 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
-	go.bytebuilders.dev/license-proxyserver v0.0.3 // indirect
-	go.bytebuilders.dev/license-verifier v0.13.0 // indirect
+	go.bytebuilders.dev/license-proxyserver v0.0.5 // indirect
+	go.bytebuilders.dev/license-verifier v0.13.4 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
+	golang.org/x/oauth2 v0.13.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
