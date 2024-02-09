@@ -142,7 +142,7 @@ func (opt *options) waitForDBReady(creds []string) error {
 
 	args = append(args, "--endpoints", opt.etcd.endpoint, "endpoint", "health")
 
-	return wait.PollImmediate(time.Second*5, time.Second*time.Duration(opt.waitTimeout), func() (bool, error) {
+	return wait.PollUntilContextTimeout(context.TODO(), time.Second*5, time.Second*time.Duration(opt.waitTimeout), true, func(ctx context.Context) (bool, error) {
 		err := sh.Command(EtcdBackupCMD, args).Run()
 		if err != nil {
 			return false, nil
@@ -416,7 +416,7 @@ func (opt *options) execCommandOnPod(pod *corev1.Pod, containerName string, comm
 		return nil, fmt.Errorf("failed to init executor: %v", err)
 	}
 
-	err = exec.Stream(remotecommand.StreamOptions{
+	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
 		Stdout: &execOut,
 		Stderr: &execErr,
 		Tty:    true,
@@ -430,7 +430,7 @@ func (opt *options) execCommandOnPod(pod *corev1.Pod, containerName string, comm
 }
 
 func waitUntilPodReady(c kubernetes.Interface, meta metav1.ObjectMeta) error {
-	return wait.PollImmediate(kutil.RetryInterval, 5*time.Minute, func() (bool, error) {
+	return wait.PollUntilContextTimeout(context.TODO(), kutil.RetryInterval, 5*time.Minute, true, func(ctx context.Context) (bool, error) {
 		if obj, err := c.CoreV1().Pods(meta.Namespace).Get(context.TODO(), meta.Name, metav1.GetOptions{}); err == nil {
 			return obj.Status.Phase == corev1.PodRunning, nil
 		}
@@ -439,7 +439,7 @@ func waitUntilPodReady(c kubernetes.Interface, meta metav1.ObjectMeta) error {
 }
 
 func (opt *options) waitUntilRestoreComplete(numberOfMembersInEtcdCluster int) error {
-	return wait.PollImmediate(1*time.Second, 2*time.Hour, func() (bool, error) {
+	return wait.PollUntilContextTimeout(context.TODO(), 1*time.Second, 2*time.Hour, true, func(ctx context.Context) (bool, error) {
 		restoreSession, err := opt.stashClient.StashV1beta1().RestoreSessions(opt.namespace).Get(context.TODO(), opt.invokerName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -465,7 +465,7 @@ func (opt *options) waitUntilRestoreComplete(numberOfMembersInEtcdCluster int) e
 func (opt *options) waitUntilScalingCompleted() error {
 	switch opt.workloadKind {
 	case apis.KindStatefulSet:
-		return wait.PollImmediate(kutil.RetryInterval, time.Second*time.Duration(opt.waitTimeout), func() (bool, error) {
+		return wait.PollUntilContextTimeout(context.TODO(), kutil.RetryInterval, time.Second*time.Duration(opt.waitTimeout), true, func(ctx context.Context) (bool, error) {
 			ss, err := opt.kubeClient.AppsV1().StatefulSets(opt.namespace).Get(context.TODO(), opt.workloadName, metav1.GetOptions{})
 			if err != nil {
 				return false, err
