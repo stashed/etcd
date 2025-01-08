@@ -168,7 +168,7 @@ func (le *LicenseEnforcer) handleLicenseVerificationFailure(licenseErr error) er
 	}()
 
 	// Log licenseInfo verification failure
-	klog.Errorln("Failed to verify license. Reason: ", licenseErr.Error())
+	klog.Errorf("failed to verify license for cluster %s, reason: %v\n", le.opts.ClusterUID, licenseErr)
 
 	// Read the namespace of current pod
 	namespace := meta.PodNamespace()
@@ -198,7 +198,7 @@ func (le *LicenseEnforcer) handleLicenseVerificationFailure(licenseErr error) er
 		in.Type = core.EventTypeWarning
 		in.Source = core.EventSource{Component: EventSourceLicenseVerifier}
 		in.Reason = EventReasonLicenseVerificationFailed
-		in.Message = fmt.Sprintf("Failed to verify license. Reason: %s", licenseErr.Error())
+		in.Message = fmt.Sprintf("failed to verify license for cluster %s, reason: %v", le.opts.ClusterUID, licenseErr)
 
 		if in.FirstTimestamp.IsZero() {
 			in.FirstTimestamp = metav1.Now()
@@ -223,27 +223,28 @@ func (le *LicenseEnforcer) Install(c *mux.PathRecorderMux) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("x-content-type-options", "nosniff")
 
-		utilruntime.Must(json.NewEncoder(w).Encode(le.LoadLicense()))
+		license, _ := le.LoadLicense()
+		utilruntime.Must(json.NewEncoder(w).Encode(license))
 	}))
 }
 
-func (le *LicenseEnforcer) LoadLicense() v1alpha1.License {
+func (le *LicenseEnforcer) LoadLicense() (v1alpha1.License, []byte) {
 	utilruntime.Must(le.createClients())
 
 	// Read cluster UID (UID of the "kube-system" namespace)
 	err := le.readClusterUID()
 	if err != nil {
 		license, _ := verifier.BadLicense(err)
-		return license
+		return license, nil
 	}
 	// Read license from file
 	err = le.acquireLicense()
 	if err != nil {
 		license, _ := verifier.BadLicense(err)
-		return license
+		return license, nil
 	}
 	license, _ := verifier.CheckLicense(le.opts)
-	return license
+	return license, le.opts.License
 }
 
 // VerifyLicensePeriodically periodically verifies whether the provided license is valid for the current cluster or not.
@@ -276,7 +277,7 @@ func verifyLicensePeriodically(le *LicenseEnforcer, licenseFile string, stopCh <
 	}
 
 	// Periodically verify license with 1 hour interval
-	fn := func() (done bool, err error) {
+	fn := func(ctx context.Context) (done bool, err error) {
 		klog.V(8).Infoln("Verifying license.......")
 		// Read license from file
 		err = le.acquireLicense()
@@ -284,16 +285,16 @@ func verifyLicensePeriodically(le *LicenseEnforcer, licenseFile string, stopCh <
 			return false, err
 		}
 		// Validate license
-		_, err = verifier.CheckLicense(le.opts)
+		lic, err := verifier.CheckLicense(le.opts)
 		if err != nil {
 			return false, err
 		}
-		klog.Infoln("Successfully verified license!")
+		klog.Infof("Successfully verified license! Valid until: %v", lic.NotAfter.UTC().Format(time.RFC822))
 		// return false so that the loop never ends
 		return false, nil
 	}
 
-	return wait.PollImmediateUntil(licenseCheckInterval, fn, stopCh)
+	return wait.PollUntilContextCancel(wait.ContextForChannel(stopCh), licenseCheckInterval, true, fn)
 }
 
 // CheckLicenseFile verifies whether the provided license is valid for the current cluster or not.
@@ -331,11 +332,11 @@ func checkLicenseFile(le *LicenseEnforcer) error {
 		return err
 	}
 	// Validate license
-	_, err = verifier.CheckLicense(le.opts)
+	lic, err := verifier.CheckLicense(le.opts)
 	if err != nil {
 		return err
 	}
-	klog.Infoln("Successfully verified license!")
+	klog.Infof("Successfully verified license! Valid until: %v", lic.NotAfter.UTC().Format(time.RFC822))
 	return nil
 }
 
