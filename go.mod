@@ -6,7 +6,7 @@ toolchain go1.22.2
 
 require (
 	github.com/spf13/cobra v1.8.0
-	go.bytebuilders.dev/license-verifier/kubernetes v0.14.0
+	go.bytebuilders.dev/license-verifier/kubernetes v0.14.4
 	gomodules.xyz/flags v0.1.3
 	gomodules.xyz/go-sh v0.1.0
 	gomodules.xyz/logs v0.0.7
@@ -15,11 +15,11 @@ require (
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
 	k8s.io/client-go v0.30.2
-	k8s.io/klog/v2 v2.120.1
-	kmodules.xyz/client-go v0.30.42
+	k8s.io/klog/v2 v2.130.1
+	kmodules.xyz/client-go v0.30.44
 	kmodules.xyz/custom-resources v0.30.0
 	kmodules.xyz/offshoot-api v0.30.1
-	stash.appscode.dev/apimachinery v0.37.0
+	stash.appscode.dev/apimachinery v0.38.0
 )
 
 require (
@@ -42,7 +42,7 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
@@ -83,10 +83,10 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
-	go.bytebuilders.dev/license-proxyserver v0.0.9 // indirect
-	go.bytebuilders.dev/license-verifier v0.14.0 // indirect
+	go.bytebuilders.dev/license-proxyserver v0.0.19 // indirect
+	go.bytebuilders.dev/license-verifier v0.14.4 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.29.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
@@ -105,7 +105,7 @@ require (
 	k8s.io/apiserver v0.30.2 // indirect
 	k8s.io/kube-aggregator v0.30.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240703190633-0aa61b46e8c2 // indirect
-	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
+	k8s.io/utils v0.0.0-20240502163921-fe8a2dddb1d0 // indirect
 	kmodules.xyz/apiversion v0.2.0 // indirect
 	kmodules.xyz/objectstore-api v0.29.1 // indirect
 	kmodules.xyz/prober v0.29.0 // indirect
