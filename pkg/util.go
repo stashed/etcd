@@ -421,7 +421,6 @@ func (opt *options) execCommandOnPod(pod *corev1.Pod, containerName string, comm
 		Stderr: &execErr,
 		Tty:    true,
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("Could not execute: %v, reason: %s", err, execErr.String())
 	}
