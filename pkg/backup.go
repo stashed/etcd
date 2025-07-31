@@ -246,6 +246,10 @@ func (opt *options) backupEtcd(targetRef api_v1beta1.TargetRef) (*restic.BackupO
 	if err != nil {
 		return nil, err
 	}
+	err = resticWrapper.EnsureNoExclusiveLock(opt.kubeClient, opt.namespace)
+	if err != nil {
+		return nil, err
+	}
 
 	// Run backup
 	return resticWrapper.RunBackup(opt.backupOptions, targetRef)
