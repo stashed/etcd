@@ -194,7 +194,7 @@ func (opt *options) createRestorePods(memberPod corev1.Pod, args []string) (*cor
 
 	for _, vol := range memberPod.Spec.Volumes {
 		if vol.Name == dataVolume {
-			pvcName = vol.VolumeSource.PersistentVolumeClaim.ClaimName
+			pvcName = vol.PersistentVolumeClaim.ClaimName
 			break
 		}
 	}
@@ -285,7 +285,7 @@ func (opt *options) replaceOldDataWithRestoredData(restorePods []corev1.Pod) err
 		command := []string{StashEtcd, "replace"}
 		command = append(command, "--data-dir="+opt.etcd.dataDir)
 
-		execOut, err := opt.execCommandOnPod(&pod, pod.ObjectMeta.Name, command)
+		execOut, err := opt.execCommandOnPod(&pod, pod.Name, command)
 		if err != nil {
 			return err
 		}
@@ -388,7 +388,7 @@ func (opt *options) getEtcdMemberPods() ([]corev1.Pod, error) {
 		}
 		return []corev1.Pod{*pod}, nil
 	default:
-		return nil, errors.New("Could not find any member for etcd server")
+		return nil, errors.New("could not find any member for etcd server")
 	}
 }
 
@@ -422,7 +422,7 @@ func (opt *options) execCommandOnPod(pod *corev1.Pod, containerName string, comm
 		Tty:    true,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Could not execute: %v, reason: %s", err, execErr.String())
+		return nil, fmt.Errorf("could not execute: %v, reason: %s", err, execErr.String())
 	}
 
 	return execOut.Bytes(), nil
@@ -545,7 +545,7 @@ func (opt *options) getCredential(appBinding *appcatalog.AppBinding) ([]string, 
 			tlsArgs = fmt.Sprintf("--key=%v", filepath.Join(opt.setupOptions.ScratchDir, EtcdClientKeyFile))
 			args = append(args, tlsArgs)
 		} else {
-			return nil, errors.New("Client cert and client key needed for TLS secured operation")
+			return nil, errors.New("client cert and client key needed for TLS secured operation")
 		}
 
 		return args, nil
